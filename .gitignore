@@ -1,0 +1,45 @@
+.terraform/
+.terraform.lock.hcl.tmp
+*.tfstate
+.tfstate.
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+terraform.tfvars
+*.tfvars
+*.tfvars.json
+*.tfplan
+tfplan
+plan.out
+Security and secrets (recommended):
+
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+*.cer
+*.crt
+.secrets.
+secrets.*
+Editor and OS noise (recommended):
+
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+Terraform/Terragrunt extras (only if you use them):
+
+.terragrunt-cache/
+.terraformrc
+terraform.rc

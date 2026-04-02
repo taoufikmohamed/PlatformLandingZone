@@ -1,0 +1,26 @@
+Fixed. The original error in providers.tf was caused by non-Terraform content (README/PowerShell text) being pasted inside the Terraform block, and I cleaned that up plus several follow-on issues.
+
+What I changed:
+
+Rebuilt providers.tf with valid provider definitions for azurerm, azuread, and random, plus a valid azurerm provider block.
+Removed invalid module-level depends_on from legacy modules in main.tf:101 and main.tf:205, because those modules define local provider blocks.
+Removed duplicate module output files that were conflicting with outputs already declared in module main files:
+modules/management-groups/outputs.tf
+modules/monitoring/outputs.tf
+modules/networking/outputs.tf
+modules/policies/outputs.tf
+modules/security/outputs.tf
+modules/subscriptions/outputs.tf
+Fixed a management group dependency cycle by changing child group input mapping in main.tf:34 and resolving parent IDs internally in main.tf:10 with updated schema in variables.tf.
+Fixed subscription module validation issues:
+Changed invalid workload_type to workload in main.tf:10
+Removed sensitive on billing_scope_id in variables.tf:13 and variables.tf:9 so for_each filtering is allowed.
+Fixed unsupported subnet block syntax by replacing dynamic service_endpoints blocks with direct arguments in main.tf:46 and main.tf:174.
+Validation result:
+
+terraform init: successful
+terraform validate: Success! The configuration is valid.
+Natural next step:
+
+Run terraform plan with your target environment values to confirm expected infrastructure changes before apply.
+GPT-5.3-Codex • 0.9x

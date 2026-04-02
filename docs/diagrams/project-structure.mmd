@@ -1,0 +1,31 @@
+flowchart TB
+  Root[PlatformLandingZone]
+
+  Root --> A[main.tf]
+  Root --> B[providers.tf]
+  Root --> C[variables.tf]
+  Root --> D[terraform.tfvars]
+  Root --> E[outputs.tf]
+
+  Root --> Env[environments]
+  Env --> EnvDev[dev]
+  Env --> EnvTest[test]
+  Env --> EnvProd[prod]
+
+  Root --> Mods[modules]
+  Mods --> MG[management-groups]
+  Mods --> SUB[subscriptions]
+  Mods --> NET[networking]
+  Mods --> SEC[security]
+  Mods --> POL[policies]
+  Mods --> MON[monitoring]
+
+  MG --> MGf[main.tf / variables.tf]
+  SUB --> SUBf[main.tf / variables.tf]
+  NET --> NETf[main.tf / variables.tf]
+  SEC --> SECf[main.tf / variables.tf]
+  POL --> POLf[main.tf / variables.tf]
+  MON --> MONf[main.tf / variables.tf]
+
+  Root --> Scripts[scripts]
+  Scripts --> DeployPS[deploy.ps1]

@@ -1,0 +1,77 @@
+flowchart LR
+  Tenant[Azure Tenant] --> MGRoot[Management Group Hierarchy]
+
+  MGRoot --> MGPlatform[Platform MG]
+  MGRoot --> MGLZ[Landing Zones MG]
+  MGRoot --> MGSandbox[Sandbox MG]
+  MGRoot --> MGDecom[Decommissioned MG]
+
+  MGPlatform --> MGIdentity[Identity MG]
+  MGPlatform --> MGManagement[Management MG]
+  MGPlatform --> MGConnectivity[Connectivity MG]
+  MGLZ --> MGCorp[Corp MG]
+  MGLZ --> MGOnline[Online MG]
+
+  SUBConn[(Connectivity Subscription)]
+  SUBMgmt[(Management Subscription)]
+  SUBId[(Identity Subscription)]
+  SUBCorp[(Corp Subscription)]
+  SUBOnline[(Online Subscription)]
+
+  MGConnectivity --> SUBConn
+  MGManagement --> SUBMgmt
+  MGIdentity --> SUBId
+  MGCorp --> SUBCorp
+  MGOnline --> SUBOnline
+
+  subgraph Connectivity[Connectivity Services]
+    HubVNet[Hub VNet]
+    Firewall[Azure Firewall]
+    Bastion[Azure Bastion]
+    DDoS[DDoS Plan optional]
+  end
+
+  subgraph Workloads[Workload VNets]
+    CorpSpoke[Corp Spoke VNet]
+    OnlineSpoke[Online Spoke VNet]
+    Peer[Hub-Spoke Peering]
+  end
+
+  subgraph Security[Security Services]
+    KeyVault[Key Vault]
+    Secrets[Secrets and Access Policies]
+  end
+
+  subgraph Monitoring[Observability]
+    LAW[Log Analytics Workspace]
+    AppI[Application Insights]
+    Alerts[Monitor Alerts and Action Group]
+  end
+
+  subgraph Governance[Governance]
+    Policies[Azure Policies]
+    AllowedLoc[Allowed Locations]
+    AllowedSku[Allowed VM SKUs]
+  end
+
+  SUBConn --> Connectivity
+  SUBMgmt --> Security
+  SUBMgmt --> Monitoring
+
+  HubVNet --> CorpSpoke
+  HubVNet --> OnlineSpoke
+  Peer --> HubVNet
+  Peer --> CorpSpoke
+  Peer --> OnlineSpoke
+
+  Firewall --> HubVNet
+  Bastion --> HubVNet
+  DDoS --> HubVNet
+
+  KeyVault --> Secrets
+  LAW --> AppI
+  LAW --> Alerts
+
+  MGRoot --> Policies
+  Policies --> AllowedLoc
+  Policies --> AllowedSku
