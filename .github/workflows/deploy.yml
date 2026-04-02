@@ -45,14 +45,14 @@ jobs:
       run: terraform plan -out=plan.tfplan
       env:
         TF_VAR_security_alert_email: ${{ secrets.SECURITY_ALERT_EMAIL }}
-        TF_VAR_billing_scope_id: ${{ secrets.BILLING_SCOPE_ID }}
+        #TF_VAR_billing_scope_id: ${{ secrets.BILLING_SCOPE_ID }}
     
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       run: terraform apply -auto-approve plan.tfplan
       env:
         TF_VAR_security_alert_email: ${{ secrets.SECURITY_ALERT_EMAIL }}
-        TF_VAR_billing_scope_id: ${{ secrets.BILLING_SCOPE_ID }}
+        #TF_VAR_billing_scope_id: ${{ secrets.BILLING_SCOPE_ID }}
     
     - name: Terraform Outputs
       if: github.ref == 'refs/heads/main'
