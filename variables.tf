@@ -7,7 +7,25 @@ variable "location" {
 variable "environment" {
   description = "Environment name (dev, test, prod)"
   type        = string
-  default     = "prod"
+  default     = "dev"
+}
+
+variable "enable_management_groups" {
+  description = "Enable management group creation and hierarchy setup"
+  type        = bool
+  default     = false
+}
+
+variable "enable_subscription_vending" {
+  description = "Enable creation or association of subscriptions via billing scope"
+  type        = bool
+  default     = false
+}
+
+variable "enable_policies" {
+  description = "Enable custom policy definitions and assignments at management group scope"
+  type        = bool
+  default     = false
 }
 
 variable "billing_scope_id" {
@@ -32,6 +50,18 @@ variable "security_alert_email" {
   description = "Email address for security alerts"
   type        = string
   sensitive   = true
+}
+
+variable "enable_security_alerts" {
+  description = "Enable monitoring action group and scheduled query alerts"
+  type        = bool
+  default     = false
+}
+
+variable "enable_example_secret" {
+  description = "Enable creation of example secret in Key Vault"
+  type        = bool
+  default     = false
 }
 
 variable "enable_vpn_gateway" {
@@ -78,17 +108,17 @@ variable "online_spoke_address_space" {
 variable "log_retention_days" {
   description = "Number of days to retain logs"
   type        = number
-  default     = 365
+  default     = 30
 }
 
 variable "enable_azure_firewall" {
   description = "Enable Azure Firewall in hub"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_bastion" {
   description = "Enable Azure Bastion"
   type        = bool
-  default     = true
+  default     = false
 }

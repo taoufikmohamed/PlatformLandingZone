@@ -1,16 +1,16 @@
 output "management_group_ids" {
   description = "IDs of created management groups"
-  value       = module.management_groups.management_group_ids
+  value       = try(module.management_groups[0].management_group_ids, {})
 }
 
 output "management_group_names" {
   description = "Names of created management groups"
-  value       = module.management_groups.management_group_names
+  value       = try(module.management_groups[0].management_group_names, {})
 }
 
 output "subscription_ids" {
   description = "IDs of created subscriptions"
-  value       = module.subscriptions.subscription_ids
+  value       = try(module.subscriptions[0].subscription_ids, {})
   sensitive   = true
 }
 
@@ -52,8 +52,8 @@ output "deployment_summary" {
   value = {
     environment       = var.environment
     location          = var.location
-    management_groups = keys(module.management_groups.management_group_ids)
-    subscriptions     = module.subscriptions.subscription_keys
+    management_groups = keys(try(module.management_groups[0].management_group_ids, {}))
+    subscriptions     = try(module.subscriptions[0].subscription_keys, [])
     has_firewall      = var.enable_azure_firewall
     has_bastion       = var.enable_bastion
   }

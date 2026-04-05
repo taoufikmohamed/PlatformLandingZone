@@ -1,4 +1,4 @@
-﻿# Resource Group for security
+# Resource Group for security
 resource "azurerm_resource_group" "security" {
   name     = "rg-security-${var.environment}"
   location = var.location
@@ -15,12 +15,12 @@ resource "azurerm_key_vault" "main" {
   enabled_for_disk_encryption = true
   soft_delete_retention_days  = 7
   purge_protection_enabled    = false
-  
+
   network_acls {
     default_action = "Allow"
     bypass         = "AzureServices"
   }
-  
+
   tags = var.tags
 }
 
@@ -39,26 +39,30 @@ resource "azurerm_key_vault_access_policy" "current_user" {
   key_vault_id = azurerm_key_vault.main.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = data.azurerm_client_config.current.object_id
-  
+
   key_permissions = [
     "Get", "List", "Create", "Delete", "Update", "Import", "Backup", "Restore", "Recover", "UnwrapKey", "WrapKey", "Verify", "Sign", "Encrypt", "Decrypt"
   ]
-  
+
   secret_permissions = [
     "Get", "List", "Set", "Delete", "Backup", "Restore", "Recover"
   ]
-  
+
   certificate_permissions = [
     "Get", "List", "Create", "Delete", "Update"
   ]
 }
 
-# Example secret (to be replaced with actual secrets)
+# Example secret is optional to avoid apply failures before permissions propagate.
 resource "azurerm_key_vault_secret" "example" {
+  count = var.enable_example_secret ? 1 : 0
+
   name         = "example-secret"
   value        = "ReplaceWithActualSecret"
   key_vault_id = azurerm_key_vault.main.id
-  
+
+  depends_on = [azurerm_key_vault_access_policy.current_user]
+
   tags = var.tags
 }
 

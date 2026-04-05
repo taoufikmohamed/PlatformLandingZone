@@ -1,10 +1,10 @@
-﻿# For EA/CSP environments, use this resource
+# For EA/CSP environments, use this resource
 resource "azurerm_subscription" "new" {
   for_each = {
     for k, v in var.subscriptions : k => v
     if v.subscription_id == "" && var.billing_scope_id != ""
   }
-  
+
   subscription_name = each.value.display_name
   billing_scope_id  = var.billing_scope_id
   workload          = "Production"
@@ -16,7 +16,7 @@ data "azurerm_subscription" "existing" {
     for k, v in var.subscriptions : k => v
     if v.subscription_id != ""
   }
-  
+
   subscription_id = each.value.subscription_id
 }
 
@@ -26,7 +26,7 @@ resource "azurerm_management_group_subscription_association" "assoc" {
     for k, v in var.subscriptions : k => v
     if v.subscription_id != ""
   }
-  
+
   management_group_id = each.value.management_group_id
   subscription_id     = each.value.subscription_id
 }

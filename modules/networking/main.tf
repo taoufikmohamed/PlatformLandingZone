@@ -1,4 +1,4 @@
-﻿# Resource Group
+# Resource Group
 resource "azurerm_resource_group" "networking" {
   name     = "rg-networking-${var.environment}"
   location = var.location
@@ -8,7 +8,7 @@ resource "azurerm_resource_group" "networking" {
 # DDoS Protection Plan
 resource "azurerm_network_ddos_protection_plan" "main" {
   count = var.enable_ddos_protection ? 1 : 0
-  
+
   name                = "ddos-plan-${var.environment}"
   location            = var.location
   resource_group_name = azurerm_resource_group.networking.name
@@ -22,7 +22,7 @@ resource "azurerm_virtual_network" "hub" {
   location            = var.location
   address_space       = var.hub_vnet.address_space
   tags                = var.tags
-  
+
   dynamic "ddos_protection_plan" {
     for_each = var.enable_ddos_protection ? [1] : []
     content {
@@ -35,7 +35,7 @@ resource "azurerm_virtual_network" "hub" {
 # Hub Subnets
 resource "azurerm_subnet" "hub" {
   for_each = var.hub_vnet.subnets
-  
+
   name                 = each.key
   resource_group_name  = azurerm_resource_group.networking.name
   virtual_network_name = azurerm_virtual_network.hub.name
@@ -46,7 +46,7 @@ resource "azurerm_subnet" "hub" {
 # Public IP for Firewall
 resource "azurerm_public_ip" "firewall" {
   count = var.enable_azure_firewall ? 1 : 0
-  
+
   name                = "pip-azure-firewall-${var.environment}"
   location            = var.location
   resource_group_name = azurerm_resource_group.networking.name
@@ -59,7 +59,7 @@ resource "azurerm_public_ip" "firewall" {
 # Azure Firewall
 resource "azurerm_firewall" "main" {
   count = var.enable_azure_firewall ? 1 : 0
-  
+
   name                = "fw-${var.environment}"
   resource_group_name = azurerm_resource_group.networking.name
   location            = var.location
@@ -67,7 +67,7 @@ resource "azurerm_firewall" "main" {
   sku_tier            = "Standard"
   zones               = ["1", "2", "3"]
   tags                = var.tags
-  
+
   ip_configuration {
     name                 = "configuration"
     subnet_id            = azurerm_subnet.hub["AzureFirewallSubnet"].id
@@ -78,13 +78,13 @@ resource "azurerm_firewall" "main" {
 # Firewall Rules
 resource "azurerm_firewall_network_rule_collection" "allow_outbound" {
   count = var.enable_azure_firewall ? 1 : 0
-  
+
   name                = "allow-outbound"
   azure_firewall_name = azurerm_firewall.main[0].name
   resource_group_name = azurerm_resource_group.networking.name
   priority            = 100
   action              = "Allow"
-  
+
   rule {
     name                  = "allow-https"
     protocols             = ["TCP"]
@@ -92,7 +92,7 @@ resource "azurerm_firewall_network_rule_collection" "allow_outbound" {
     destination_addresses = ["*"]
     destination_ports     = ["443"]
   }
-  
+
   rule {
     name                  = "allow-dns"
     protocols             = ["UDP"]
@@ -105,7 +105,7 @@ resource "azurerm_firewall_network_rule_collection" "allow_outbound" {
 # Public IP for Bastion
 resource "azurerm_public_ip" "bastion" {
   count = var.enable_bastion ? 1 : 0
-  
+
   name                = "pip-bastion-${var.environment}"
   location            = var.location
   resource_group_name = azurerm_resource_group.networking.name
@@ -118,12 +118,12 @@ resource "azurerm_public_ip" "bastion" {
 # Azure Bastion
 resource "azurerm_bastion_host" "main" {
   count = var.enable_bastion ? 1 : 0
-  
+
   name                = "bastion-${var.environment}"
   location            = var.location
   resource_group_name = azurerm_resource_group.networking.name
   tags                = var.tags
-  
+
   ip_configuration {
     name                 = "configuration"
     subnet_id            = azurerm_subnet.hub["AzureBastionSubnet"].id
@@ -134,7 +134,7 @@ resource "azurerm_bastion_host" "main" {
 # Spoke Virtual Networks
 resource "azurerm_virtual_network" "spoke" {
   for_each = var.spoke_vnets
-  
+
   name                = each.value.name
   resource_group_name = azurerm_resource_group.networking.name
   location            = var.location
@@ -148,16 +148,16 @@ resource "azurerm_subnet" "spoke" {
     for pair in flatten([
       for vnet_name, vnet in var.spoke_vnets : [
         for subnet_name, subnet in vnet.subnets : {
-          key          = "${vnet_name}-${subnet_name}"
-          vnet_name    = vnet_name
-          subnet_name  = subnet_name
-          address_prefixes = subnet.address_prefixes
+          key               = "${vnet_name}-${subnet_name}"
+          vnet_name         = vnet_name
+          subnet_name       = subnet_name
+          address_prefixes  = subnet.address_prefixes
           service_endpoints = subnet.service_endpoints
         }
       ]
     ]) : pair.key => pair
   }
-  
+
   name                 = each.value.subnet_name
   resource_group_name  = azurerm_resource_group.networking.name
   virtual_network_name = azurerm_virtual_network.spoke[each.value.vnet_name].name
@@ -168,7 +168,7 @@ resource "azurerm_subnet" "spoke" {
 # VNet Peering: Hub to Spoke
 resource "azurerm_virtual_network_peering" "hub_to_spoke" {
   for_each = var.spoke_vnets
-  
+
   name                         = "hub-to-${each.key}"
   resource_group_name          = azurerm_resource_group.networking.name
   virtual_network_name         = azurerm_virtual_network.hub.name
@@ -181,7 +181,7 @@ resource "azurerm_virtual_network_peering" "hub_to_spoke" {
 # VNet Peering: Spoke to Hub
 resource "azurerm_virtual_network_peering" "spoke_to_hub" {
   for_each = var.spoke_vnets
-  
+
   name                         = "${each.key}-to-hub"
   resource_group_name          = azurerm_resource_group.networking.name
   virtual_network_name         = azurerm_virtual_network.spoke[each.key].name
@@ -194,17 +194,20 @@ resource "azurerm_virtual_network_peering" "spoke_to_hub" {
 # Route Tables for Spokes to force tunnel through Firewall
 resource "azurerm_route_table" "spoke" {
   for_each = var.spoke_vnets
-  
+
   name                = "rt-${each.key}-to-firewall"
   location            = var.location
   resource_group_name = azurerm_resource_group.networking.name
   tags                = var.tags
-  
-  route {
-    name                   = "default-route"
-    address_prefix         = "0.0.0.0/0"
-    next_hop_type          = "VirtualAppliance"
-    next_hop_in_ip_address = var.enable_azure_firewall ? azurerm_firewall.main[0].ip_configuration[0].private_ip_address : null
+
+  dynamic "route" {
+    for_each = var.enable_azure_firewall ? [1] : []
+    content {
+      name                   = "default-route"
+      address_prefix         = "0.0.0.0/0"
+      next_hop_type          = "VirtualAppliance"
+      next_hop_in_ip_address = azurerm_firewall.main[0].ip_configuration[0].private_ip_address
+    }
   }
 }
 
@@ -214,14 +217,14 @@ resource "azurerm_subnet_route_table_association" "spoke" {
     for pair in flatten([
       for vnet_name, vnet in var.spoke_vnets : [
         for subnet_name, subnet in vnet.subnets : {
-          key          = "${vnet_name}-${subnet_name}"
-          subnet_id    = azurerm_subnet.spoke["${vnet_name}-${subnet_name}"].id
+          key            = "${vnet_name}-${subnet_name}"
+          subnet_id      = azurerm_subnet.spoke["${vnet_name}-${subnet_name}"].id
           route_table_id = azurerm_route_table.spoke[vnet_name].id
         }
       ]
     ]) : pair.key => pair
   }
-  
+
   subnet_id      = each.value.subnet_id
   route_table_id = each.value.route_table_id
 }

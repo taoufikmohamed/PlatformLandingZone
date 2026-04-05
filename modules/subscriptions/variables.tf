@@ -1,4 +1,4 @@
-﻿variable "subscriptions" {
+variable "subscriptions" {
   description = "Subscriptions configuration"
   type = map(object({
     display_name        = string

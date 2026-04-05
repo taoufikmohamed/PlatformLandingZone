@@ -1,4 +1,4 @@
-﻿variable "management_group_ids" {
+variable "management_group_ids" {
   description = "Management group IDs"
   type        = map(string)
 }

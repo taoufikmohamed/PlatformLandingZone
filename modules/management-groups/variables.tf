@@ -1,4 +1,4 @@
-﻿variable "management_groups" {
+variable "management_groups" {
   description = "Parent management groups configuration"
   type = map(object({
     display_name = string

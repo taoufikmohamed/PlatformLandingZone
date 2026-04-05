@@ -1,17 +1,17 @@
-﻿# Built-in policy: Allowed locations
+# Built-in policy: Allowed locations
 resource "azurerm_policy_definition" "allowed_locations" {
-  name         = "allowed-locations"
-  policy_type  = "Custom"
-  mode         = "Indexed"
-  display_name = "Allowed locations"
-  description  = "Restrict locations to allowed regions"
+  name                = "allowed-locations"
+  policy_type         = "Custom"
+  mode                = "Indexed"
+  display_name        = "Allowed locations"
+  description         = "Restrict locations to allowed regions"
   management_group_id = var.management_group_ids["platform"]
-  
+
   metadata = jsonencode({
-    version = "1.0.0"
+    version  = "1.0.0"
     category = "General"
   })
-  
+
   parameters = jsonencode({
     listOfAllowedLocations = {
       type = "Array"
@@ -21,12 +21,12 @@ resource "azurerm_policy_definition" "allowed_locations" {
       }
     }
   })
-  
+
   policy_rule = jsonencode({
     if = {
       not = {
         field = "location"
-        in = "[parameters('listOfAllowedLocations')]"
+        in    = "[parameters('listOfAllowedLocations')]"
       }
     }
     then = {
@@ -37,18 +37,18 @@ resource "azurerm_policy_definition" "allowed_locations" {
 
 # Built-in policy: Allowed VM SKUs
 resource "azurerm_policy_definition" "allowed_vm_skus" {
-  name         = "allowed-vm-skus"
-  policy_type  = "Custom"
-  mode         = "All"
-  display_name = "Allowed virtual machine SKUs"
-  description  = "Restrict VM SKUs to approved list"
+  name                = "allowed-vm-skus"
+  policy_type         = "Custom"
+  mode                = "All"
+  display_name        = "Allowed virtual machine SKUs"
+  description         = "Restrict VM SKUs to approved list"
   management_group_id = var.management_group_ids["platform"]
-  
+
   metadata = jsonencode({
-    version = "1.0.0"
+    version  = "1.0.0"
     category = "Compute"
   })
-  
+
   parameters = jsonencode({
     listOfAllowedSKUs = {
       type = "Array"
@@ -58,18 +58,18 @@ resource "azurerm_policy_definition" "allowed_vm_skus" {
       }
     }
   })
-  
+
   policy_rule = jsonencode({
     if = {
       allOf = [
         {
-          field = "type"
+          field  = "type"
           equals = "Microsoft.Compute/virtualMachines"
         },
         {
           not = {
             field = "Microsoft.Compute/virtualMachines/sku.name"
-            in = "[parameters('listOfAllowedSKUs')]"
+            in    = "[parameters('listOfAllowedSKUs')]"
           }
         }
       ]
@@ -82,29 +82,29 @@ resource "azurerm_policy_definition" "allowed_vm_skus" {
 
 # Policy: Enforce HTTPS for storage accounts
 resource "azurerm_policy_definition" "storage_https" {
-  name         = "storage-https-only"
-  policy_type  = "Custom"
-  mode         = "Indexed"
-  display_name = "Enforce HTTPS for storage accounts"
-  description  = "Require HTTPS traffic for storage accounts"
+  name                = "storage-https-only"
+  policy_type         = "Custom"
+  mode                = "Indexed"
+  display_name        = "Enforce HTTPS for storage accounts"
+  description         = "Require HTTPS traffic for storage accounts"
   management_group_id = var.management_group_ids["platform"]
-  
+
   metadata = jsonencode({
-    version = "1.0.0"
+    version  = "1.0.0"
     category = "Storage"
   })
-  
+
   parameters = jsonencode({})
-  
+
   policy_rule = jsonencode({
     if = {
       allOf = [
         {
-          field = "type"
+          field  = "type"
           equals = "Microsoft.Storage/storageAccounts"
         },
         {
-          field = "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly"
+          field     = "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly"
           notEquals = true
         }
       ]
@@ -120,7 +120,7 @@ resource "azurerm_management_group_policy_assignment" "allowed_locations" {
   name                 = "assign-allowed-locations"
   management_group_id  = var.management_group_ids["platform"]
   policy_definition_id = azurerm_policy_definition.allowed_locations.id
-  
+
   parameters = jsonencode({
     listOfAllowedLocations = {
       value = var.allowed_locations
@@ -132,7 +132,7 @@ resource "azurerm_management_group_policy_assignment" "allowed_vm_skus" {
   name                 = "assign-allowed-vm-skus"
   management_group_id  = var.management_group_ids["landing-zones"]
   policy_definition_id = azurerm_policy_definition.allowed_vm_skus.id
-  
+
   parameters = jsonencode({
     listOfAllowedSKUs = {
       value = var.allowed_vm_skus
@@ -144,7 +144,7 @@ resource "azurerm_management_group_policy_assignment" "storage_https" {
   name                 = "assign-storage-https"
   management_group_id  = var.management_group_ids["platform"]
   policy_definition_id = azurerm_policy_definition.storage_https.id
-  
+
   parameters = jsonencode({})
 }
 

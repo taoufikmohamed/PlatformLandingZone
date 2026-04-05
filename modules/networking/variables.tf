@@ -1,4 +1,4 @@
-﻿variable "subscription_id" {
+variable "subscription_id" {
   description = "Subscription ID for networking resources"
   type        = string
 }
@@ -24,7 +24,7 @@ variable "hub_vnet" {
     name          = string
     address_space = list(string)
     subnets = map(object({
-      address_prefixes = list(string)
+      address_prefixes  = list(string)
       service_endpoints = list(string)
     }))
   })
@@ -36,7 +36,7 @@ variable "spoke_vnets" {
     name          = string
     address_space = list(string)
     subnets = map(object({
-      address_prefixes = list(string)
+      address_prefixes  = list(string)
       service_endpoints = list(string)
     }))
   }))

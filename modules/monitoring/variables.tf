@@ -1,4 +1,4 @@
-﻿variable "subscription_id" {
+variable "subscription_id" {
   description = "Subscription ID for monitoring resources"
   type        = string
 }
@@ -33,4 +33,10 @@ variable "security_alert_email" {
   description = "Email for security alerts"
   type        = string
   sensitive   = true
+}
+
+variable "enable_security_alerts" {
+  description = "Enable monitoring action group and scheduled query alerts"
+  type        = bool
+  default     = false
 }

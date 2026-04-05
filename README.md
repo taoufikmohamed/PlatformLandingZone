@@ -2,6 +2,47 @@
 
 Terraform-based Azure Platform Landing Zone with modular governance, networking, security, subscriptions, and monitoring.
 
+## Deployment Profiles
+
+Use profile tfvars files to control cost and architecture depth per environment:
+
+- Free tier profile: `environments/dev/free-tier.tfvars`
+- Balanced profile: `environments/test/balanced.tfvars`
+- Full platform profile (permission-safe): `environments/prod/full-platform.tfvars`
+- Full platform + governance profile: `environments/prod/full-platform-governance.tfvars`
+
+Run Terraform with a selected profile:
+
+```powershell
+terraform plan -var-file="environments/dev/free-tier.tfvars"
+terraform apply -var-file="environments/dev/free-tier.tfvars"
+```
+
+```powershell
+terraform plan -var-file="environments/test/balanced.tfvars"
+terraform apply -var-file="environments/test/balanced.tfvars"
+```
+
+```powershell
+terraform plan -var-file="environments/prod/full-platform.tfvars"
+terraform apply -var-file="environments/prod/full-platform.tfvars" -auto-approve
+```
+
+```powershell
+terraform plan -var-file="environments/prod/full-platform-governance.tfvars"
+terraform apply -var-file="environments/prod/full-platform-governance.tfvars" -auto-approve
+terraform plan -var-file="environments/prod/full-platform-governance.tfvars"
+terraform apply -var-file="environments/prod/full-platform-governance.tfvars" -auto-approve
+```
+
+Notes:
+
+- Keep `billing_scope_id` empty unless your tenant supports subscription vending.
+- Full profile enables higher-cost controls (Firewall, Bastion, DDoS) by default.
+- Management groups and MG-scoped policies in the governance profile require tenant-root management group write permissions.
+- Use the permission-safe full profile when those tenant permissions are not available.
+- Free profile is optimized for low cost and fast validation/apply.
+
 ## Project Structure
 
 ```text

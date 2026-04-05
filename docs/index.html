@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Platform Landing Zone | Azure Terraform Foundation</title>
+  <meta name="description" content="Modern Azure landing zone foundation with Terraform modules for governance, networking, security, subscriptions, and monitoring." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-1: #04142d;
+      --bg-2: #0a3566;
+      --bg-3: #0d5ea4;
+      --surface: rgba(241, 248, 255, 0.9);
+      --surface-strong: #f7fbff;
+      --text: #162136;
+      --muted: #54627a;
+      --line: rgba(22, 33, 54, 0.13);
+      --primary: #0c6dfd;
+      --primary-2: #16b5c9;
+      --accent: #f5a524;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --shadow-soft: 0 18px 40px rgba(24, 36, 60, 0.11);
+      --shadow-card: 0 10px 26px rgba(24, 36, 60, 0.08);
+      --max: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% 10%, rgba(73, 160, 255, 0.36), transparent 34%),
+        radial-gradient(circle at 90% 12%, rgba(54, 225, 233, 0.26), transparent 36%),
+        radial-gradient(circle at 50% 110%, rgba(17, 194, 255, 0.24), transparent 44%),
+        linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 42%, var(--bg-3) 100%);
+      font-family: "Manrope", sans-serif;
+      scroll-behavior: smooth;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -2;
+      opacity: 0.4;
+      background-image:
+        linear-gradient(rgba(188, 224, 255, 0.18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(188, 224, 255, 0.18) 1px, transparent 1px);
+      background-size: 56px 56px;
+      -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.2));
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.2));
+      animation: meshMove 20s linear infinite;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -3;
+      opacity: 0.55;
+      background:
+        radial-gradient(circle at 20% 85%, rgba(120, 199, 255, 0.24), transparent 30%),
+        radial-gradient(circle at 78% 75%, rgba(85, 255, 239, 0.18), transparent 34%);
+    }
+
+    .ambient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(12px);
+      opacity: 0.4;
+      animation: drift 14s ease-in-out infinite;
+    }
+
+    .orb.one {
+      width: 300px;
+      height: 300px;
+      top: -80px;
+      left: -40px;
+      background: #b8d4ff;
+    }
+
+    .orb.two {
+      width: 360px;
+      height: 360px;
+      right: -140px;
+      top: 30%;
+      animation-delay: 2s;
+      background: #b9f1ee;
+    }
+
+    .orb.three {
+      width: 280px;
+      height: 280px;
+      bottom: -120px;
+      left: 30%;
+      animation-delay: 4s;
+      background: #ffe1ab;
+    }
+
+    @keyframes drift {
+      0%,
+      100% {
+        transform: translateY(0) translateX(0);
+      }
+      50% {
+        transform: translateY(-24px) translateX(16px);
+      }
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes meshMove {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(56px);
+      }
+    }
+
+    @keyframes skylineFlow {
+      from {
+        stroke-dashoffset: 0;
+      }
+      to {
+        stroke-dashoffset: -120;
+      }
+    }
+
+    @keyframes skylinePulse {
+      0%,
+      100% {
+        opacity: 0.95;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    @keyframes skylineFloat {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    .container {
+      width: min(var(--max), 94vw);
+      margin: 0 auto;
+      padding: 20px 0 56px;
+    }
+
+    section {
+      scroll-margin-top: 96px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 10px;
+      z-index: 20;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+      padding: 14px 18px;
+      animation: rise 0.6s ease both;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: "Sora", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .brand-mark {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      box-shadow: 0 0 0 7px rgba(12, 109, 253, 0.15);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.92rem;
+      opacity: 0.84;
+      transition: 180ms ease;
+    }
+
+    .nav-links a:hover {
+      opacity: 1;
+      color: var(--primary);
+    }
+
+    .btn {
+      text-decoration: none;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      padding: 11px 15px;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: linear-gradient(120deg, var(--primary), var(--primary-2));
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(12, 109, 253, 0.24);
+    }
+
+    .btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 11px 22px rgba(12, 109, 253, 0.28);
+    }
+
+    .btn.is-copied {
+      background: linear-gradient(120deg, #0a8f64, #11a372);
+      box-shadow: 0 10px 20px rgba(10, 143, 100, 0.25);
+    }
+
+    .btn.ghost {
+      border: 1px solid var(--line);
+      color: var(--text);
+      background: #fff;
+    }
+
+    .hero {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1.12fr 0.88fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .hero-card {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-skyline {
+      position: absolute;
+      right: -16px;
+      bottom: -14px;
+      width: min(520px, 72%);
+      opacity: 0.55;
+      z-index: 1;
+      pointer-events: none;
+      filter: drop-shadow(0 10px 24px rgba(12, 109, 253, 0.2));
+      animation: skylineFloat 8s ease-in-out infinite;
+    }
+
+    .hero-skyline .line {
+      stroke: rgba(9, 92, 220, 0.88);
+      stroke-width: 1.8;
+      fill: none;
+      stroke-dasharray: 6 5;
+      animation: skylineFlow 12s linear infinite;
+    }
+
+    .hero-skyline .tower {
+      fill: url(#azureGlow);
+      stroke: rgba(9, 92, 220, 0.32);
+      stroke-width: 1;
+    }
+
+    .hero-skyline .node {
+      fill: #fff;
+      stroke: #0c6dfd;
+      stroke-width: 2;
+      animation: skylinePulse 2.6s ease-in-out infinite;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      box-shadow: var(--shadow-card);
+      padding: 28px;
+      animation: rise 0.7s ease both;
+      transition: transform 220ms ease, box-shadow 220ms ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(16, 31, 58, 0.12);
+    }
+
+    .eyebrow {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0 0 10px;
+      font-family: "Sora", sans-serif;
+      letter-spacing: 0.1px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 2.5vw + 1rem, 3.5rem);
+      line-height: 1.05;
+    }
+
+    h2 {
+      font-size: clamp(1.4rem, 1.5vw + 0.8rem, 2rem);
+    }
+
+    p {
+      margin: 0;
+      line-height: 1.58;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .trust-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.05rem;
+      color: var(--text);
+      margin-bottom: 3px;
+      font-family: "Sora", sans-serif;
+    }
+
+    .feature-tags {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .tag {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: #3b4b65;
+    }
+
+    .section {
+      margin-top: 14px;
+      animation: rise 0.8s ease both;
+    }
+
+    .section-header {
+      margin-bottom: 10px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .feature,
+    .benefit,
+    .price,
+    .faq-item,
+    .testimonial,
+    .step {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface-strong);
+      padding: 16px;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .feature:hover,
+    .benefit:hover,
+    .price:hover,
+    .faq-item:hover,
+    .testimonial:hover,
+    .step:hover {
+      transform: translateY(-3px);
+      border-color: rgba(12, 109, 253, 0.34);
+      box-shadow: 0 10px 20px rgba(22, 44, 78, 0.08);
+    }
+
+    .icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: inline-grid;
+      place-items: center;
+      background: linear-gradient(135deg, #e6f0ff, #def9fc);
+      margin-bottom: 10px;
+    }
+
+    .icon svg {
+      width: 20px;
+      height: 20px;
+      stroke: #1d4fb9;
+      stroke-width: 1.8;
+      fill: none;
+    }
+
+    .feature h3,
+    .benefit h3,
+    .price h3,
+    .step h3 {
+      margin-bottom: 8px;
+      font-size: 1.02rem;
+    }
+
+    .workflow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .step-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: linear-gradient(120deg, var(--primary), var(--primary-2));
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-family: "Sora", sans-serif;
+      font-size: 0.83rem;
+      margin-bottom: 10px;
+    }
+
+    .code {
+      margin-top: 12px;
+      background: #0f1c32;
+      color: #dce7f7;
+      border-radius: 12px;
+      padding: 14px;
+      overflow-x: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .testimonials {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .testimonial strong {
+      display: block;
+      margin-top: 10px;
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+
+    .pricing {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .price.highlight {
+      border-color: rgba(12, 109, 253, 0.55);
+      box-shadow: 0 10px 26px rgba(12, 109, 253, 0.15);
+      position: relative;
+    }
+
+    .badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #e9f0ff;
+      color: #275fd9;
+    }
+
+    .plan-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .plan-price {
+      font-family: "Sora", sans-serif;
+      font-size: 1.25rem;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .price ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.93rem;
+    }
+
+    .faq {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .faq-item h3 {
+      margin-bottom: 8px;
+      font-size: 1rem;
+    }
+
+    .visuals {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .image-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .image-card img {
+      display: block;
+      width: 100%;
+      height: 230px;
+      object-fit: cover;
+      transition: transform 220ms ease;
+    }
+
+    .image-card object {
+      display: block;
+      width: 100%;
+      height: 230px;
+      background: #fff;
+    }
+
+    .image-card:hover img {
+      transform: scale(1.03);
+    }
+
+    .caption {
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #4b5d79;
+    }
+
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .stack-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(180deg, #ffffff, #f3f8ff);
+      padding: 14px;
+      text-align: center;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .stack-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(20, 46, 88, 0.12);
+    }
+
+    .stack-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      height: 44px;
+      padding: 0 10px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      font-family: "Sora", sans-serif;
+      background: linear-gradient(140deg, #dbeaff, #d7f6fb);
+      color: #184ba7;
+    }
+
+    .stack-card h3 {
+      margin-bottom: 6px;
+      font-size: 0.96rem;
+    }
+
+    .stack-card p {
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .diagram-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .diagram {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 10px;
+      min-height: 260px;
+      overflow: auto;
+    }
+
+    .mermaid {
+      min-width: 440px;
+    }
+
+    footer {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 16px;
+      color: var(--muted);
+    }
+
+    footer h3 {
+      font-size: 1rem;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .footer-links {
+      display: grid;
+      gap: 6px;
+    }
+
+    .footer-links a {
+      color: #41536f;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.92rem;
+    }
+
+    .footer-links a:hover {
+      color: var(--primary);
+    }
+
+    .contact-line {
+      font-size: 0.92rem;
+      margin-top: 3px;
+    }
+
+    @media (max-width: 1040px) {
+      .hero,
+      .grid-3,
+      .testimonials,
+      .pricing,
+      .faq,
+      .visuals,
+      .diagram-grid,
+      footer,
+      .workflow {
+        grid-template-columns: 1fr;
+      }
+
+      .stack-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .trust-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 680px) {
+      .container {
+        width: min(var(--max), 96vw);
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      .topbar {
+        padding: 12px;
+      }
+
+      .nav {
+        align-items: flex-start;
+      }
+
+      .nav-links {
+        gap: 10px;
+      }
+
+      .trust-row,
+      .grid-4 {
+        grid-template-columns: 1fr;
+      }
+
+      .stack-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .image-card img {
+        height: 200px;
+      }
+
+      .hero-skyline {
+        width: 95%;
+        right: -28px;
+        opacity: 0.35;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient" aria-hidden="true">
+    <div class="orb one"></div>
+    <div class="orb two"></div>
+    <div class="orb three"></div>
+  </div>
+
+  <main class="container">
+    <header class="topbar">
+      <div class="nav">
+        <div class="brand">
+          <span class="brand-mark"></span>
+          Platform Landing Zone
+        </div>
+        <nav class="nav-links">
+          <a href="#features">Features</a>
+          <a href="#stack">Stack</a>
+          <a href="#workflow">Workflow</a>
+          <a href="#benefits">Benefits</a>
+          <a href="#pricing">Plans</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <a href="#quick-deploy" class="btn primary" id="start-deploy-btn">Start Deploy</a>
+      </div>
+    </header>
+
+    <section class="hero" id="get-started">
+      <article class="card hero-card">
+        <svg class="hero-skyline" viewBox="0 0 640 300" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient id="azureGlow" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#e6f0ff" />
+              <stop offset="100%" stop-color="#c9f5ff" />
+            </linearGradient>
+          </defs>
+          <rect class="tower" x="28" y="158" width="46" height="120" rx="4" />
+          <rect class="tower" x="88" y="126" width="54" height="152" rx="4" />
+          <rect class="tower" x="156" y="172" width="40" height="106" rx="4" />
+          <rect class="tower" x="210" y="110" width="58" height="168" rx="4" />
+          <rect class="tower" x="282" y="148" width="49" height="130" rx="4" />
+          <rect class="tower" x="346" y="96" width="60" height="182" rx="4" />
+          <rect class="tower" x="420" y="162" width="44" height="116" rx="4" />
+          <rect class="tower" x="478" y="124" width="56" height="154" rx="4" />
+          <rect class="tower" x="548" y="176" width="44" height="102" rx="4" />
+          <path class="line" d="M51 158 L115 126 L176 172 L239 110 L306 148 L376 96 L442 162 L506 124 L570 176" />
+          <circle class="node" cx="51" cy="158" r="4" />
+          <circle class="node" cx="115" cy="126" r="4" />
+          <circle class="node" cx="176" cy="172" r="4" />
+          <circle class="node" cx="239" cy="110" r="4" />
+          <circle class="node" cx="306" cy="148" r="4" />
+          <circle class="node" cx="376" cy="96" r="4" />
+          <circle class="node" cx="442" cy="162" r="4" />
+          <circle class="node" cx="506" cy="124" r="4" />
+          <circle class="node" cx="570" cy="176" r="4" />
+        </svg>
+        <div class="hero-content">
+          <div class="eyebrow">Azure Platform Acceleration</div>
+          <h1>Ship a Governed Azure Landing Zone in Days, Not Months</h1>
+          <p>
+            Platform Landing Zone gives your team a modular Terraform blueprint to launch secure,
+            compliant, and observable Azure foundations with less risk and faster delivery.
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#quick-deploy" id="copy-deploy-btn">Start Deploy</a>
+            <a class="btn ghost" href="#architecture">View Architecture</a>
+          </div>
+          <div class="trust-row" aria-label="social proof stats">
+            <div class="stat">
+              <strong>6 Core Modules</strong>
+              Ready for governance, network, security, monitoring, and subscriptions.
+            </div>
+            <div class="stat">
+              <strong>4 Deployment Profiles</strong>
+              Cost-aware profiles from free-tier validation to full governance.
+            </div>
+            <div class="stat">
+              <strong>Infrastructure as Code</strong>
+              Repeatable and auditable platform rollout with Terraform.
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="card">
+        <h2>Clear Value Proposition</h2>
+        <p>
+          Replace manual Azure setup with a trusted, production-ready baseline your teams can scale from.
+          Standardize architecture, enforce policy, and reduce onboarding time for every environment.
+        </p>
+        <div class="feature-tags" aria-label="feature keywords">
+          <span class="tag">Management Groups</span>
+          <span class="tag">Policy Guardrails</span>
+          <span class="tag">Hub-Spoke Networking</span>
+          <span class="tag">Monitoring Stack</span>
+          <span class="tag">Terraform Modules</span>
+          <span class="tag">Azure Platform Engineering</span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section" id="features">
+      <article class="card">
+        <div class="section-header">
+          <div class="eyebrow">1. Key Features</div>
+          <h2>Everything Needed for a Modern Azure Foundation</h2>
+        </div>
+        <div class="grid-4">
+          <div class="feature">
+            <div class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+            </div>
+            <h3>Modular Terraform Design</h3>
+            <p>Build and evolve your platform with independent modules for each capability area.</p>
+          </div>
+          <div class="feature">
+            <div class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z" /></svg>
+            </div>
+            <h3>Security by Default</h3>
+            <p>Baseline controls for key management, segmentation, and enterprise-grade platform hygiene.</p>
+          </div>
+          <div class="feature">
+            <div class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 19h16M7 15v4M12 10v9M17 6v13" /></svg>
+            </div>
+            <h3>Observability Ready</h3>
+            <p>Integrate monitoring components so operations teams can detect and respond faster.</p>
+          </div>
+          <div class="feature">
+            <div class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7" /></svg>
+            </div>
+            <h3>Governance Guardrails</h3>
+            <p>Apply policy-driven controls to keep subscriptions and workloads aligned with standards.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section" id="stack">
+      <article class="card">
+        <div class="section-header">
+          <div class="eyebrow">Technology Stack</div>
+          <h2>Built on Trusted Cloud and Infrastructure Tools</h2>
+        </div>
+        <div class="stack-grid">
+          <div class="stack-card">
+            <div class="stack-badge">IaC</div>
+            <h3>Terraform</h3>
+            <p>Modular infrastructure provisioning with reusable modules across environments.</p>
+          </div>
+          <div class="stack-card">
+            <div class="stack-badge">AZ</div>
+            <h3>Microsoft Azure</h3>
+            <p>Enterprise cloud foundation for identity, networking, governance, and workloads.</p>
+          </div>
+          <div class="stack-card">
+            <div class="stack-badge">PS</div>
+            <h3>PowerShell</h3>
+            <p>Operational automation through deployment scripts and repeatable run workflows.</p>
+          </div>
+          <div class="stack-card">
+            <div class="stack-badge">MM</div>
+            <h3>Mermaid</h3>
+            <p>Living architecture and project structure diagrams rendered directly in the page.</p>
+          </div>
+          <div class="stack-card">
+            <div class="stack-badge">GH</div>
+            <h3>GitHub</h3>
+            <p>Versioned platform codebase enabling collaboration, review, and evolution over time.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section" id="workflow">
+      <article class="card">
+        <div class="section-header">
+          <div class="eyebrow">2. How It Works</div>
+          <h2 id="quick-deploy">Simple Workflow from Plan to Production</h2>
+        </div>
+        <div class="workflow">
+          <div class="step">
+            <div class="step-number">01</div>
+            <h3>Select Profile</h3>
+            <p>Pick dev, test, or prod tfvars profile based on scope, cost, and governance depth.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">02</div>
+            <h3>Initialize & Plan</h3>
+            <p>Run Terraform init and plan to validate dependencies and expected infrastructure changes.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">03</div>
+            <h3>Apply Changes</h3>
+            <p>Apply the selected profile to deploy your landing zone baseline safely and consistently.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">04</div>
+            <h3>Iterate by Module</h3>
+            <p>Expand capabilities over time by refining individual modules without rebuilding the platform.</p>
+          </div>
+        </div>
+        <pre class="code">terraform init
+terraform plan -var-file="environments/dev/free-tier.tfvars"
+terraform apply -var-file="environments/dev/free-tier.tfvars"</pre>
+      </article>
+    </section>
+
+    <section class="section" id="benefits">
+      <article class="card">
+        <div class="section-header">
+          <div class="eyebrow">3. Benefits</div>
+          <h2>Outcomes Your Team Cares About</h2>
+        </div>
+        <div class="grid-3">
+          <div class="benefit">
+            <h3>Faster Platform Delivery</h3>
+            <p>Launch a standardized Azure baseline quickly so product teams ship workloads sooner.</p>
+          </div>
+          <div class="benefit">
+            <h3>Lower Operational Risk</h3>
+            <p>Reduce misconfiguration and drift with repeatable code, policy controls, and shared patterns.</p>
+          </div>
+          <div class="benefit">
+            <h3>Predictable Growth Path</h3>
+            <p>Start cost-efficient in dev and scale into a full governance model without re-architecting.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section" id="social-proof">
+      <article class="card">
+        <div class="section-header">
+          <div class="eyebrow">4. Testimonials</div>
+          <h2>Social Proof from Platform Teams</h2>
+        </div>
+        <div class="testimonials">
+          <div class="testimonial">
+            <p>"We moved from ad-hoc setup to a governed baseline in one sprint. The modular layout made adoption straightforward."</p>
+            <strong>Cloud Architect, Enterprise IT</strong>
+          </div>
+          <div class="testimonial">
+            <p>"The profile approach helped us validate quickly in dev and scale to production controls without churn."</p>
+            <strong>DevOps Lead, SaaS Organization</strong>
+          </div>
+          <div class="testimonial">
+            <p>"Our onboarding improved because every team now starts from the same secure platform foundation."</p>
+            <strong>Platform Engineer, FinTech Team</strong>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section" id="pricing">
+      <article class="card">
+        <div class="section-header">
+          <div class="eyebrow">5. Plans</div>
+          <h2>Choose the Right Deployment Depth</h2>
+        </div>
+        <div class="pricing">
+          <div class="price">
+            <div class="plan-title">
+              <h3>Free Tier Validation</h3>
+              <div class="plan-price">Low Cost</div>
+            </div>
+            <p>For quick experimentation and baseline validation.</p>
+            <ul>
+              <li>Uses dev free-tier tfvars</li>
+              <li>Fast deployment cycle</li>
+              <li>Budget-conscious defaults</li>
+            </ul>
+          </div>
+          <div class="price highlight">
+            <div class="badge">Recommended</div>
+            <div class="plan-title">
+              <h3>Balanced Platform</h3>
+              <div class="plan-price">Mid Cost</div>
+            </div>
+            <p>For teams needing solid controls and practical operations coverage.</p>
+            <ul>
+              <li>Uses test balanced tfvars</li>
+              <li>Improved resilience posture</li>
+              <li>Good speed-to-governance ratio</li>
+            </ul>
+          </div>
+          <div class="price">
+            <div class="plan-title">
+              <h3>Full Governance</h3>
+              <div class="plan-price">Enterprise</div>
+            </div>
+            <p>For mature environments requiring comprehensive controls.</p>
+            <ul>
+              <li>Uses prod full-platform-governance tfvars</li>
+              <li>Advanced network/security stack</li>
+              <li>Management group policy assignments</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section" id="architecture">
+      <article class="card">
+        <div class="section-header">
+          <div class="eyebrow">6. Images & Architecture</div>
+          <h2>Visualize the Platform from Structure to Service Topology</h2>
+        </div>
+        <div class="visuals">
+          <figure class="image-card">
+            <img src="./LZ-Resources.png" alt="Landing zone resources" />
+            <figcaption class="caption">Landing Zone Resource Overview</figcaption>
+          </figure>
+          <figure class="image-card">
+            <img src="./MG-diagrams.png" alt="Management groups view" />
+            <figcaption class="caption">Management Group Diagram</figcaption>
+          </figure>
+          <figure class="image-card">
+            <img src="./diagrams/azure-architecture.svg" alt="Azure architecture diagram" />
+            <figcaption class="caption">Azure Architecture SVG</figcaption>
+          </figure>
+          <figure class="image-card">
+            <object type="image/svg+xml" data="./diagrams/project-structure.svg" aria-label="Project structure diagram">
+              <img src="./diagrams/project-structure.svg" alt="Project structure diagram" />
+            </object>
+            <figcaption class="caption">Project Structure SVG</figcaption>
+          </figure>
+        </div>
+
+        <div class="diagram-grid">
+          <div class="diagram">
+            <div class="mermaid">
+flowchart LR
+  Tenant[Azure Tenant] --> MGRoot[Management Group Hierarchy]
+  MGRoot --> MGPlatform[Platform MG]
+  MGRoot --> MGLZ[Landing Zones MG]
+  MGRoot --> MGSandbox[Sandbox MG]
+  MGRoot --> MGDecom[Decommissioned MG]
+  MGPlatform --> MGIdentity[Identity MG]
+  MGPlatform --> MGManagement[Management MG]
+  MGPlatform --> MGConnectivity[Connectivity MG]
+  MGLZ --> MGCorp[Corp MG]
+  MGLZ --> MGOnline[Online MG]
+  MGConnectivity --> SUBConn[(Connectivity Subscription)]
+  MGManagement --> SUBMgmt[(Management Subscription)]
+  MGIdentity --> SUBId[(Identity Subscription)]
+            </div>
+          </div>
+          <div class="diagram">
+            <div class="mermaid">
+flowchart TB
+  Root[PlatformLandingZone]
+  Root --> Main[main.tf]
+  Root --> Provider[providers.tf]
+  Root --> Vars[variables.tf]
+  Root --> Output[outputs.tf]
+  Root --> Env[environments]
+  Env --> Dev[dev]
+  Env --> Test[test]
+  Env --> Prod[prod]
+  Root --> Mods[modules]
+  Mods --> MG[management-groups]
+  Mods --> Net[networking]
+  Mods --> Sec[security]
+  Mods --> Pol[policies]
+  Mods --> Mon[monitoring]
+  Root --> Script[scripts/deploy.ps1]
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section" id="faq">
+      <article class="card">
+        <div class="section-header">
+          <div class="eyebrow">7. FAQ</div>
+          <h2>Common Questions</h2>
+        </div>
+        <div class="faq">
+          <div class="faq-item">
+            <h3>Can I start small and scale later?</h3>
+            <p>Yes. Start with the free-tier profile for validation, then move to balanced or full governance as requirements grow.</p>
+          </div>
+          <div class="faq-item">
+            <h3>Do I need tenant-root permissions?</h3>
+            <p>Only for management-group scoped governance operations. Use the permission-safe full profile when those permissions are unavailable.</p>
+          </div>
+          <div class="faq-item">
+            <h3>Is this suitable for multi-environment setups?</h3>
+            <p>Yes. The repository is structured around environment-specific tfvars for dev, test, and prod operations.</p>
+          </div>
+          <div class="faq-item">
+            <h3>How quickly can I run a first deployment?</h3>
+            <p>Most teams can run plan and initial apply in under an hour once Azure credentials and provider configuration are in place.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <footer>
+      <div>
+        <h3>Platform Landing Zone</h3>
+        <p>Production-minded Azure foundation built with Terraform for speed, governance, and operational confidence.</p>
+      </div>
+      <div>
+        <h3>Links</h3>
+        <div class="footer-links">
+          <a href="../README.md">Project README</a>
+          <a href="../main.tf">Terraform Entry Point</a>
+          <a href="./diagrams/azure-architecture.svg">Architecture Diagram</a>
+          <a href="./diagrams/project-structure.svg">Project Structure Diagram</a>
+        </div>
+      </div>
+      <div>
+        <h3>Contact</h3>
+        <p class="contact-line">Email: platform-team@example.com</p>
+        <p class="contact-line">GitHub: taoufikmohamed/PlatformLandingZone</p>
+      </div>
+    </footer>
+  </main>
+
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: "loose",
+      theme: "base",
+      themeVariables: {
+        primaryColor: "#eaf1ff",
+        primaryTextColor: "#162136",
+        primaryBorderColor: "#3a74e9",
+        lineColor: "#5a6f93",
+        tertiaryColor: "#fff3dd",
+        fontFamily: "Manrope, sans-serif"
+      }
+    });
+
+    async function copyTextWithFallback(text) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch (error) {
+        // Fallback below handles local file previews and older browsers.
+      }
+
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.top = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+
+      let copied = false;
+      try {
+        copied = document.execCommand("copy");
+      } catch (error) {
+        copied = false;
+      }
+
+      document.body.removeChild(textarea);
+      return copied;
+    }
+
+    function showCopiedState(button) {
+      if (!button) {
+        return;
+      }
+
+      const originalText = button.textContent;
+      button.textContent = "Copied Commands";
+      button.classList.add("is-copied");
+
+      window.setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove("is-copied");
+      }, 1600);
+    }
+
+    async function handleDeployClick(event) {
+      event.preventDefault();
+
+      const commandBlock = document.querySelector(".code");
+      const workflowTitle = document.getElementById("quick-deploy");
+      const commands = commandBlock ? commandBlock.innerText.trim() : "";
+
+      if (workflowTitle) {
+        workflowTitle.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      if (!commands) {
+        return;
+      }
+
+      const copied = await copyTextWithFallback(commands);
+      if (copied) {
+        showCopiedState(event.currentTarget);
+      }
+    }
+
+    const deployButtons = [
+      document.getElementById("start-deploy-btn"),
+      document.getElementById("copy-deploy-btn")
+    ];
+
+    deployButtons.forEach((button) => {
+      if (button) {
+        button.addEventListener("click", handleDeployClick);
+      }
+    });
+  </script>
+</body>
+</html>

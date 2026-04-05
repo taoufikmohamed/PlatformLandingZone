@@ -10,8 +10,14 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
+locals {
+  management_subscription_id   = var.billing_scope_id != "" && var.enable_subscription_vending && var.enable_management_groups ? try(module.subscriptions[0].subscription_ids["management"], data.azurerm_subscription.current.id) : data.azurerm_subscription.current.id
+  connectivity_subscription_id = var.billing_scope_id != "" && var.enable_subscription_vending && var.enable_management_groups ? try(module.subscriptions[0].subscription_ids["connectivity"], data.azurerm_subscription.current.id) : data.azurerm_subscription.current.id
+}
+
 # Module: Management Groups
 module "management_groups" {
+  count  = var.enable_management_groups ? 1 : 0
   source = "./modules/management-groups"
 
   management_groups = {
@@ -59,6 +65,7 @@ module "management_groups" {
 
 # Module: Subscriptions (if billing scope provided)
 module "subscriptions" {
+  count      = var.enable_management_groups && var.enable_subscription_vending && var.billing_scope_id != "" ? 1 : 0
   source     = "./modules/subscriptions"
   depends_on = [module.management_groups]
 
@@ -67,27 +74,27 @@ module "subscriptions" {
   subscriptions = {
     "connectivity" = {
       display_name        = "Connectivity-${var.environment}"
-      management_group_id = module.management_groups.management_group_ids["connectivity"]
+      management_group_id = module.management_groups[0].management_group_ids["connectivity"]
       subscription_id     = ""
     }
     "management" = {
       display_name        = "Management-${var.environment}"
-      management_group_id = module.management_groups.management_group_ids["management"]
+      management_group_id = module.management_groups[0].management_group_ids["management"]
       subscription_id     = ""
     }
     "identity" = {
       display_name        = "Identity-${var.environment}"
-      management_group_id = module.management_groups.management_group_ids["identity"]
+      management_group_id = module.management_groups[0].management_group_ids["identity"]
       subscription_id     = ""
     }
     "corp" = {
       display_name        = "Corp-${var.environment}"
-      management_group_id = module.management_groups.management_group_ids["corp"]
+      management_group_id = module.management_groups[0].management_group_ids["corp"]
       subscription_id     = ""
     }
     "online" = {
       display_name        = "Online-${var.environment}"
-      management_group_id = module.management_groups.management_group_ids["online"]
+      management_group_id = module.management_groups[0].management_group_ids["online"]
       subscription_id     = ""
     }
   }
@@ -97,17 +104,18 @@ module "subscriptions" {
 module "security" {
   source = "./modules/security"
 
-  subscription_id = var.billing_scope_id != "" ? module.subscriptions.subscription_ids["management"] : data.azurerm_subscription.current.id
-  location        = var.location
-  environment     = var.environment
-  tags            = var.tags
+  subscription_id       = local.management_subscription_id
+  location              = var.location
+  environment           = var.environment
+  tags                  = var.tags
+  enable_example_secret = var.enable_example_secret
 }
 
 # Module: Networking (Hub & Spokes)
 module "networking" {
   source = "./modules/networking"
 
-  subscription_id = var.billing_scope_id != "" ? module.subscriptions.subscription_ids["connectivity"] : data.azurerm_subscription.current.id
+  subscription_id = local.connectivity_subscription_id
   location        = var.location
   environment     = var.environment
   tags            = var.tags
@@ -186,10 +194,11 @@ module "networking" {
 
 # Module: Azure Policies
 module "policies" {
+  count      = var.enable_management_groups && var.enable_policies ? 1 : 0
   source     = "./modules/policies"
   depends_on = [module.management_groups]
 
-  management_group_ids = module.management_groups.management_group_ids
+  management_group_ids = module.management_groups[0].management_group_ids
 
   allowed_locations = var.allowed_locations
   allowed_vm_skus   = var.allowed_vm_skus
@@ -199,7 +208,7 @@ module "policies" {
 module "monitoring" {
   source = "./modules/monitoring"
 
-  subscription_id = var.billing_scope_id != "" ? module.subscriptions.subscription_ids["management"] : data.azurerm_subscription.current.id
+  subscription_id = local.management_subscription_id
   location        = var.location
   environment     = var.environment
   tags            = var.tags
@@ -207,5 +216,6 @@ module "monitoring" {
   log_analytics_workspace_name = "law-platform-${var.environment}-${random_string.suffix.result}"
   log_retention_days           = var.log_retention_days
 
-  security_alert_email = var.security_alert_email
+  security_alert_email   = var.security_alert_email
+  enable_security_alerts = var.enable_security_alerts
 }
