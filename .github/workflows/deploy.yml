@@ -2,12 +2,12 @@
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ master ]
     paths:
       - '**.tf'
       - 'terraform.tfvars'
   pull_request:
-    branches: [ main, master ]
+    branches: [ master ]
     paths:
       - '**.tf'
   workflow_dispatch:
@@ -45,17 +45,23 @@ jobs:
       run: terraform plan -out=plan.tfplan
       env:
         TF_VAR_security_alert_email: ${{ secrets.SECURITY_ALERT_EMAIL }}
-        TF_VAR_billing_scope_id: ${{ secrets.BILLING_SCOPE_ID }}
+        #TF_VAR_billing_scope_id: ${{ secrets.BILLING_SCOPE_ID }}
+    - name: Debug GitHub context
+      run: |
+        echo "event_name=${{ github.event_name }}"
+        echo "ref=${{ github.ref }}"
+        echo "ref_name=${{ github.ref_name }}"
     
     - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
       run: terraform apply -auto-approve plan.tfplan
-      env:
-        TF_VAR_security_alert_email: ${{ secrets.SECURITY_ALERT_EMAIL }}
-        TF_VAR_billing_scope_id: ${{ secrets.BILLING_SCOPE_ID }}
-    
+      # - name: Terraform Apply
+    #   if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    #   run: terraform apply -auto-approve plan.tfplan
+    #   env:
+    #     TF_VAR_security_alert_email: ${{ secrets.SECURITY_ALERT_EMAIL }}
+    #     #TF_VAR_billing_scope_id: ${{ secrets.BILLING_SCOPE_ID }}
     - name: Terraform Outputs
-      if: github.ref == 'refs/heads/main'
-      run: |
-        terraform output -json > outputs.json
-        echo "::set-output name=outputs::$(cat outputs.json)"
+      if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
+      run: terraform output -json > outputs.json
+    
